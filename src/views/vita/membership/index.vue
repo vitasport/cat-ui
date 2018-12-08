@@ -9,15 +9,13 @@
                 <el-form-item>
                     <el-button type="primary"  class="el-icon-search" v-on:click="getFormData">查询</el-button>
                 </el-form-item>
+				
+				<el-form-item style="float: right;">
+					<el-button type="success" @click="addAticle()">新增</el-button>
+				</el-form-item>
             </el-form>
 			
-			<div>
-				<el-row >
-					<el-col style="text-align: right;">
-						<el-button type="success" @click="addAticle()">新增</el-button>
-					</el-col>
-				</el-row>
-			</div>
+			
 			
         </el-col>
 		
