@@ -88,7 +88,7 @@
 </template>
 
 <script>
-	import { fatchList } from "@/api/vita/order.js";
+	import { fetchList } from "@/api/vita/order.js";
 	import waves from "@/directive/waves/index.js"; // 水波纹指令
 	import { mapState, mapGetters } from "vuex";
 
