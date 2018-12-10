@@ -13,7 +13,6 @@
 				<el-form-item style="float: right;">
 					<el-button type="success" @click="addAticle()">新增</el-button>
 				</el-form-item>
-				
             </el-form>
 			
 			
