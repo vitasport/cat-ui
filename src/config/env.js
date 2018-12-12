@@ -29,8 +29,8 @@
 
 let baseUrl = '';
 if(process.env.NODE_ENV == 'development') {
-		baseUrl = `http://cat.vitasports.cn/cat`;
-//		baseUrl = `http://localhost:9999`;
+		// baseUrl = `http://cat.vitasports.cn/cat`;
+		baseUrl = `http://192.168.1.206:9999`;
 } else if(process.env.NODE_ENV == 'production') {
 	baseUrl = `http://cat.vitasports.cn/`;
 }

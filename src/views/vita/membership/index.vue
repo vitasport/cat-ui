@@ -21,26 +21,24 @@
 		
 		<div>
 			<el-table :data="list" v-loading="listLoading" ref="auditListTable" border fit highlight-current-row style="width: 99%">
-				<el-table-column align="center" label="文章类型">
+				<el-table-column align="center" label="头像">
 					<template slot-scope="scope">
-						<span>{{ scope.row.type | typeFilter }}</span>
+						<img class="userIcon" :src="scope.row.photo" />
 					</template>
 				</el-table-column>
-				<el-table-column align="center" label="发布人员" prop="publisherName" />
-				<el-table-column align="center" label="发布属性">
+				<el-table-column align="center" label="昵称" prop="nickName" />
+				<el-table-column align="center" label="手机号码">
 					<template slot-scope="scope">
-						<span>{{ scope.row.publishState | publishStateFilter }}</span>
+						<span>{{ scope.row.phone}}</span>
 					</template>
 				</el-table-column>
-				<el-table-column align="center" label="发布时间" prop="publisherTime" />
-				<el-table-column align="center" label="审核状态">
+				<el-table-column align="center" label="会员等级">
 					<template slot-scope="scope">
-						<span>{{ scope.row.state | stateFilter }}</span>
-					</template>
-				</el-table-column>
-				<el-table-column align="center" label="审核人员">
-					<template slot-scope="scope">
-						<span>{{ scope.row.verifierName}}</span>
+						<!-- <span>{{ scope.row.type | stateFilter }}</span> -->
+						<el-tag
+							:type="scope.row.type | typeFilter">
+							{{scope.row.type | typeNameFilter}}
+						</el-tag>
 					</template>
 				</el-table-column>
 				<el-table-column align="center" label="查看">
@@ -51,7 +49,7 @@
 			</el-table>
 			
 			<div v-show="pageShow" class="pagination-container">
-				<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="listQuery.page" :page-sizes="[10,20,30, 50]" :page-size="listQuery.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
+				<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="listQuery.page" :page-sizes="[10,20,30, 50]" :page-size="listQuery.limit" layout="total, sizes, prev, pager, next, jumper" :total="total">
 				</el-pagination>
 			</div>
 			
@@ -65,7 +63,7 @@
 </template>
 
 <script>
-	import { fetchList} from "@/api/vita/ground.js";
+	import { fetchList} from "@/api/vita/membership.js";
 	import { mapState, mapGetters } from "vuex";
 
 	
@@ -83,10 +81,8 @@
 				total: null,
 				listLoading: false,
 				listQuery: {
-					pubState: '',
-					state: '',
-					startPage: 1,
-					pageSize: 20
+					page: 1,
+					limit: 20
 				},
 				activeId: '0',
 				pageShow: false,
@@ -124,7 +120,17 @@
 			},
 			typeFilter(type){
 				const typeMap = {
-					'1': "普通文章"
+					'01': "",
+					'02': "success",
+					'03': "warning",
+				};
+				return typeMap[type];
+			},
+			typeNameFilter(type){
+				const typeMap = {
+					'01': "个人会员",
+					'02': "企业会员",
+					'03': "培训机构",
 				};
 				return typeMap[type];
 			}
@@ -144,15 +150,15 @@
 				this.list = null;
 			},
 			getList() {
-// 				this.listLoading = true;
-// 				this.pageShow = false;
-// 				fatchList(this.listQuery).then(res => {
-// 					this.list = res.data.data.list
-// 					this.total = res.data.data.total
-// 					this.listLoading = false;
-// 					if(this.total > 0)
-// 						this.pageShow = true;
-// 				});
+				this.listLoading = true;
+				this.pageShow = false;
+				fetchList(this.listQuery).then(res => {
+					this.list = res.data.data.list
+					this.total = res.data.data.total
+					this.listLoading = false;
+					if(this.total > 0)
+						this.pageShow = true;
+				});
 			},
 			handleSizeChange(val) {
 				this.listQuery.pageSize = val;
@@ -201,3 +207,15 @@
 		}
 	};
 </script>
+
+<style scoped="scoped">
+	
+	.userIcon{
+		max-height: 50px;
+		width: auto;
+		max-width: 50px;
+		border-radius: 25px;
+	}
+	
+	
+</style>

@@ -11,7 +11,7 @@
                 </el-form-item>
 				
 				<el-form-item style="float: right;">
-					<el-button type="success" @click="addAticle()">新增</el-button>
+					<i class="el-icon-circle-plus-outline" @click="fillGround()"></i>
 				</el-form-item>
             </el-form>
 			
@@ -20,44 +20,69 @@
         </el-col>
 		
 		<div>
-			<el-table :data="list" v-loading="listLoading" ref="auditListTable" border fit highlight-current-row style="width: 99%">
-				<el-table-column align="center" label="文章类型">
+			<el-table :data="list" v-loading="listLoading" ref="groundListTable" border fit highlight-current-row style="width: 99%">
+				<el-table-column align="center" label="场地名称">
 					<template slot-scope="scope">
-						<span>{{ scope.row.type | typeFilter }}</span>
+						<span>{{ scope.row.name}}</span>
 					</template>
 				</el-table-column>
-				<el-table-column align="center" label="发布人员" prop="publisherName" />
-				<el-table-column align="center" label="发布属性">
+				<el-table-column align="center" label="运动类型">
 					<template slot-scope="scope">
-						<span>{{ scope.row.publishState | publishStateFilter }}</span>
+						<span>{{ scope.row.publishState }}</span>
 					</template>
 				</el-table-column>
-				<el-table-column align="center" label="发布时间" prop="publisherTime" />
-				<el-table-column align="center" label="审核状态">
+				<el-table-column align="center" label="容纳人数" prop="publisherTime" />
+				<el-table-column align="center" label="片区">
 					<template slot-scope="scope">
-						<span>{{ scope.row.state | stateFilter }}</span>
+						<span>{{ scope.row.state }}</span>
 					</template>
 				</el-table-column>
-				<el-table-column align="center" label="审核人员">
+
+				<el-table-column align="center" label="操作">
 					<template slot-scope="scope">
-						<span>{{ scope.row.verifierName}}</span>
-					</template>
-				</el-table-column>
-				<el-table-column align="center" label="查看">
-					<template slot-scope="scope">
-						<i class="icon-ai-eye" @click="dialogDetail(scope.row.id)"></i>
+					<!-- <i class="el-icon-edit-outline" @click="eiditGround(scope.row)"></i> -->
+					<i class="el-icon-delete" @click="deleteGround(scope.row.id, scope.$index)"></i>
 					</template>
 				</el-table-column>
 			</el-table>
 			
 			<div v-show="pageShow" class="pagination-container">
-				<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="listQuery.page" :page-sizes="[10,20,30, 50]" :page-size="listQuery.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
+				<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="listQuery.page" :page-sizes="[10,20,30, 50]" :page-size="listQuery.limit" layout="total, sizes, prev, pager, next, jumper" :total="total">
 				</el-pagination>
 			</div>
 			
 		</div>
        
-	
+			
+							<!--修改信息-->
+							<el-col :span="2">
+									<el-dialog title="设备信息" :visible.sync="dialogFormVisible">
+											<div style="width:80%;margin: 0 auto">
+													<el-form v-loading="updateLoading" :model="groundForm" status-icon :rules="rules" ref="groundForm" :inline="false" label-width="90px">
+														
+															<el-form-item label="场地名称"   prop="name">
+																	<el-input type="text" placeholder="场地名称" auto-complete="off" v-model="groundForm.name"></el-input>
+															</el-form-item>
+															
+															<el-form-item label="运动类型"   prop="groundNo">
+																	<el-input type="text" placeholder="请输入运动类型" auto-complete="off" v-model="groundForm.groundNo"></el-input>
+															</el-form-item>
+															
+															<el-form-item label="容纳人数"   prop="description">
+																	<el-input type="text" placeholder="请输入容纳人数" auto-complete="off" v-model="groundForm.description"></el-input>
+															</el-form-item>
+															
+
+															
+													</el-form>
+											</div>
+											<div slot="footer" class="dialog-footer">
+													<el-button @click="dialogFormVisible = false">取 消</el-button>
+													<el-button type="primary" @click="submitForm('groundForm')">确 定</el-button>
+											</div>
+									</el-dialog>
+							</el-col>
+			
        
 	   
 	   
@@ -65,7 +90,7 @@
 </template>
 
 <script>
-	import { fetchList} from "@/api/vita/ground.js";
+	import { fetchList, addGround, deleteGround, updateGround} from "@/api/vita/ground.js";
 	import { mapState, mapGetters } from "vuex";
 
 	
@@ -83,18 +108,33 @@
 				total: null,
 				listLoading: false,
 				listQuery: {
-					pubState: '',
-					state: '',
-					startPage: 1,
-					pageSize: 20
+					page: 1,
+					limit: 20
 				},
-				activeId: '0',
 				pageShow: false,
-				viewNewfs: false,
-				viewUpdateNewfs: false,
-				newlists:{},
-				aticleText:'',
-				isCreate: 0,
+				groundForm: {
+						
+				},
+				updateLoading:false,
+				dialogFormVisible: false,
+			  rules: {
+						name: [
+								{ required: true, message: '请输入设备名称', trigger: 'blur' },
+						],
+						GroundNo: [
+								{ required: true, message: '请输入设备编号', trigger: 'blur' },
+						],
+						description: [
+								{ required: true, message: '请输入设备描述', trigger: 'blur' },
+						],
+						masterId: [
+								{ required: true, message: '请选择主板', trigger: 'blur' },
+						],
+						masterIndex: [
+								{ required: true, message: '请输入主板INDEX', trigger: 'blur' },
+						],
+				},
+				isUpdate:false,
 			};
 		},
 		computed: {
@@ -104,34 +144,10 @@
 			})
 		},
 		filters: {
-			publishStateFilter(state) {
-				if(state) {
-					const publishStateMap = {
-						'1': "公开",
-						'2': '部分公开',
-						'3': '不公开'
-					};
-					return publishStateMap[state];
-				}
-			},
-			stateFilter(state) {
-				const publishStateMap = {
-					'1': "待审核 ",
-					'2': '审核通过',
-					'3': '审核失败'
-				};
-				return publishStateMap[state];
-			},
-			typeFilter(type){
-				const typeMap = {
-					'1': "普通文章"
-				};
-				return typeMap[type];
-			}
+			
 		},
 		created() {
 			this.getList();
-			
 		},
 		methods: {
 			// 查询菜单
@@ -140,19 +156,18 @@
 			},
 			resetForm(formName) {
 				this.$refs[formName].resetFields();
-				this.detailList = null;
 				this.list = null;
 			},
 			getList() {
-// 				this.listLoading = true;
-// 				this.pageShow = false;
-// 				fatchList(this.listQuery).then(res => {
-// 					this.list = res.data.data.list
-// 					this.total = res.data.data.total
-// 					this.listLoading = false;
-// 					if(this.total > 0)
-// 						this.pageShow = true;
-// 				});
+				this.listLoading = true;
+				this.pageShow = false;
+				fetchList(this.listQuery).then(res => {
+					this.list = res.data.data.list
+					this.total = res.data.data.total
+					this.listLoading = false;
+					if(this.total > 0)
+						this.pageShow = true;
+				});
 			},
 			handleSizeChange(val) {
 				this.listQuery.pageSize = val;
@@ -161,23 +176,6 @@
 			handleCurrentChange(val) {
 				this.listQuery.startPage = val;
 				this.getList();
-			},
-			addAticle(){
-				//this.viewNewfs = true;
-				
-				this.activeId = new Date().getTime()+'';
-				this.isCreate = 1;
-				this.viewUpdateNewfs = true
-				
-				this.newlists = {};
-				this.aticleText = '';
-				
-			},
-			cancelNewFsDialog() {
-				this.viewNewfs = false;
-			},
-			cancelUpdateNewFsDialog() {
-				this.viewUpdateNewfs = false;
 			},
 			/**
 			* ifshow: true/false msg: message  type: error/warning/success
@@ -189,15 +187,97 @@
 					type: type
 				})
 			},
-			dialogDetail(idMsg){
-				this.activeId = idMsg
-				this.isCreate = 0
-				this.viewUpdateNewfs = true;
+			fillGround(){
+				this.dialogFormVisible = true;
+				this.groundForm = {};
+				this.isUpdate = false;
+				this.$refs['groundForm'].clearValidate(); //移除校验结果
+				
+			},
+			eiditGround(groundInfo){
+				this.dialogFormVisible = true;
+				this.groundForm = groundInfo;
+				this.isUpdate = true;
+				this.$refs['groundForm'].clearValidate(); //移除校验结果
 				
 				
-
-			}
+			},
+			deleteGround(GroundId,index){
+				
+					console.log(index)
+					this.listLoading = true;
+					
+					let params = {
+							id: GroundId
+					}
+					
+					deleteGround(params).then(res => {
+						this.listLoading = true;
+						console.log(res);
+						if(res.data.desc == 'SUCCESS'){
+							this.listLoading = false;
+							this.$message({
+								type: 'success',
+								message: '删除成功'
+							});
+							this.list.splice(index,1);
+						}
+					});
+			},
+			// 表单提交
+			submitForm(formName) {
+					this.$refs[formName].validate((valid) => {
+							if (valid) {
+									console.log(formName);
+									if(this.isUpdate){
+										this.updateGround();
+									}else
+										this.addGround();
+									
+							} else {
+								
+									return false
+							}
+					})
+			},
+			addGround(){
+				this.updateLoading = true;
+				addGround(this.groundForm).then(res => {
+					this.updateLoading = false;
+					if(res.data.desc == 'SUCCESS'){
+						this.$message({
+							type: 'success',
+							message: '添加成功'
+						});
+						this.dialogFormVisible = false;
+						this.getList();
+					}
+				});
+				
+			},
+			updateGround(){
+					this.updateLoading = true;
+					updateGround(this.groundForm).then(res => {
+						this.updateLoading = false;
+						if(res.data.desc == 'SUCCESS'){
+							this.$message({
+								type: 'success',
+								message: '更新成功'
+							});
+							this.dialogFormVisible = false;
+							this.getList();
+						}
+					});
+			},
 			
 		}
 	};
 </script>
+
+<style scoped="scoped">
+	
+	.el-icon-circle-plus-outline{
+		font-size: 20px;
+	}
+	
+</style>
