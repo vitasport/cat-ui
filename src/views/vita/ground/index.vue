@@ -10,9 +10,9 @@
                     <el-button type="primary"  class="el-icon-search" v-on:click="getFormData">查询</el-button>
                 </el-form-item>
 				
-				<el-form-item style="float: right;">
-					<i class="el-icon-circle-plus-outline" @click="fillGround()"></i>
-				</el-form-item>
+								<!-- <el-form-item style="float: right;">
+									<i class="el-icon-circle-plus-outline" @click="fillGround()"></i>
+								</el-form-item> -->
             </el-form>
 			
 			
@@ -28,19 +28,19 @@
 				</el-table-column>
 				<el-table-column align="center" label="运动类型">
 					<template slot-scope="scope">
-						<span>{{ scope.row.publishState }}</span>
+						<span>{{ scope.row.sportKey | typeFilter}}</span>
 					</template>
 				</el-table-column>
-				<el-table-column align="center" label="容纳人数" prop="publisherTime" />
-				<el-table-column align="center" label="片区">
+				<el-table-column align="center" label="描述" prop="discription" />
+				<el-table-column align="center" label="价格">
 					<template slot-scope="scope">
-						<span>{{ scope.row.state }}</span>
+						<span>{{ scope.row.price/100 }}</span>
 					</template>
 				</el-table-column>
 
 				<el-table-column align="center" label="操作">
 					<template slot-scope="scope">
-					<!-- <i class="el-icon-edit-outline" @click="eiditGround(scope.row)"></i> -->
+					<i class="el-icon-edit-outline" @click="eiditGround(scope.row)"></i>
 					<i class="el-icon-delete" @click="deleteGround(scope.row.id, scope.$index)"></i>
 					</template>
 				</el-table-column>
@@ -58,20 +58,30 @@
 							<el-col :span="2">
 									<el-dialog title="设备信息" :visible.sync="dialogFormVisible">
 											<div style="width:80%;margin: 0 auto">
-													<el-form v-loading="updateLoading" :model="groundForm" status-icon :rules="rules" ref="groundForm" :inline="false" label-width="90px">
+													<el-form v-loading="updateLoading" :model="groundForm" status-icon ref="groundForm" :inline="false" label-width="90px">
 														
 															<el-form-item label="场地名称"   prop="name">
 																	<el-input type="text" placeholder="场地名称" auto-complete="off" v-model="groundForm.name"></el-input>
 															</el-form-item>
 															
-															<el-form-item label="运动类型"   prop="groundNo">
-																	<el-input type="text" placeholder="请输入运动类型" auto-complete="off" v-model="groundForm.groundNo"></el-input>
+															<!-- <el-form-item label="运动类型"   prop="sportKey">
+																	<el-select v-model="groundForm.sportKey" filterable placeholder="请选择">
+																			<el-option
+																							v-for="item in typeList"
+																							:key="item.id"
+																							:label="item.name"
+																							:value="item.id">
+																			</el-option>
+																	</el-select>
+															</el-form-item> -->
+															
+															<el-form-item label="描述"   prop="discription">
+																	<el-input type="text" placeholder="请输入描述" auto-complete="off" v-model="groundForm.discription"></el-input>
 															</el-form-item>
 															
-															<el-form-item label="容纳人数"   prop="description">
-																	<el-input type="text" placeholder="请输入容纳人数" auto-complete="off" v-model="groundForm.description"></el-input>
+															<el-form-item label="价格"   prop="price">
+																	<el-input type="text" placeholder="请输入价格" auto-complete="off" v-model="groundForm.realPrice"></el-input>
 															</el-form-item>
-															
 
 															
 													</el-form>
@@ -135,6 +145,7 @@
 						],
 				},
 				isUpdate:false,
+				typeList:[{id:'01',name:'篮球'},{id:'02',name:'网球'}],
 			};
 		},
 		computed: {
@@ -144,7 +155,16 @@
 			})
 		},
 		filters: {
-			
+				typeFilter(type){
+					const typeMap = {
+						'01': "篮球",
+						'02': "网球",
+					};
+					return typeMap[type];
+				},
+				moneyFilter(money){
+					return money/100;
+				}
 		},
 		created() {
 			this.getList();
@@ -191,14 +211,15 @@
 				this.dialogFormVisible = true;
 				this.groundForm = {};
 				this.isUpdate = false;
-				this.$refs['groundForm'].clearValidate(); //移除校验结果
+				//this.$refs['groundForm'].clearValidate(); //移除校验结果
 				
 			},
 			eiditGround(groundInfo){
 				this.dialogFormVisible = true;
 				this.groundForm = groundInfo;
+				this.groundForm.realPrice = groundInfo.price/100;
 				this.isUpdate = true;
-				this.$refs['groundForm'].clearValidate(); //移除校验结果
+				//this.$refs['groundForm'].clearValidate(); //移除校验结果
 				
 				
 			},
@@ -257,7 +278,15 @@
 			},
 			updateGround(){
 					this.updateLoading = true;
-					updateGround(this.groundForm).then(res => {
+					
+					var params = {
+						id:this.groundForm.id,
+						name:this.groundForm.name,
+						discription:this.groundForm.discription,
+						price:this.groundForm.realPrice*100,
+					}
+					
+					updateGround(params).then(res => {
 						this.updateLoading = false;
 						if(res.data.desc == 'SUCCESS'){
 							this.$message({

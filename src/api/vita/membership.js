@@ -8,3 +8,12 @@ export function fetchList(query) {
 		params: query
 	})
 }
+
+
+export function queryOrderList(query) {
+	return request({
+		url: baseUrl + '/vita-wm/order/findSuccessOrderByPage',
+		method: 'post',
+		params: query
+	})
+}

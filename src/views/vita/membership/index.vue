@@ -10,9 +10,10 @@
                     <el-button type="primary"  class="el-icon-search" v-on:click="getFormData">查询</el-button>
                 </el-form-item>
 				
-				<el-form-item style="float: right;">
-					<el-button type="success" @click="addAticle()">新增</el-button>
-				</el-form-item>
+							<!-- <el-form-item style="float: right;">
+								<el-button type="success" @click="addMember()">新增</el-button>
+							</el-form-item> -->
+							
             </el-form>
 			
 			
@@ -20,7 +21,7 @@
         </el-col>
 		
 		<div>
-			<el-table :data="list" v-loading="listLoading" ref="auditListTable" border fit highlight-current-row style="width: 99%">
+			<el-table :data="list" v-loading="listLoading" ref="memberListTable" border fit highlight-current-row style="width: 99%">
 				<el-table-column align="center" label="头像">
 					<template slot-scope="scope">
 						<img class="userIcon" :src="scope.row.photo" />
@@ -34,7 +35,6 @@
 				</el-table-column>
 				<el-table-column align="center" label="会员等级">
 					<template slot-scope="scope">
-						<!-- <span>{{ scope.row.type | stateFilter }}</span> -->
 						<el-tag
 							:type="scope.row.type | typeFilter">
 							{{scope.row.type | typeNameFilter}}
@@ -43,7 +43,7 @@
 				</el-table-column>
 				<el-table-column align="center" label="查看">
 					<template slot-scope="scope">
-						<i class="icon-ai-eye" @click="dialogDetail(scope.row.id)"></i>
+						<i class="icon-ai-eye" @click="dialogDetail(scope.row)"></i>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -55,6 +55,65 @@
 			
 		</div>
        
+			 
+			 
+			 
+										<!--查看信息-->
+			 							<el-col :span="2">
+			 									<el-dialog title="设备信息" :visible.sync="dialogFormVisible">
+			 											<div style="width:90%;margin: 0 auto">
+															
+																<div class="sectionInfo">个人信息</div>
+																<div class="listInfo">
+																		<div class="inlineH">头像</div>
+																		<div class="inlineH">姓名</div>
+																		<div class="inlineH">手机</div>
+																		<div class="inlineH">身份证</div>
+																</div>
+																<div class="listInfo">
+																		<div class="inlineD">
+																			<img class="userIcon" :src="lookData.photo" />
+																		</div>
+																		<div class="inlineD">{{ lookData.name}}</div>
+																		<div class="inlineD">{{ lookData.phone}}</div>
+																		<div class="inlineD">{{ lookData.certNo}}</div>
+																</div>
+			 															
+																<!-- <div class="sectionInfo">公司信息</div>
+																<div>
+																		<img class="userIcon" :src="lookData.photo" />
+																		<span>{{ lookData.phone}}</span>
+																</div> -->
+																
+																<div class="sectionInfo">消费记录</div>
+																<el-table :data="orderList" ref="orderListTable" border fit highlight-current-row style="width: 99%">
+															
+																	<el-table-column align="center" label="订单号" prop="orderNo" />
+																	<el-table-column align="center" label="交易时间" prop="orderDate" />
+																	<el-table-column align="center" label="交易详情">
+																		<template slot-scope="scope">
+																			<span>{{ scope.row.productName}}</span>
+																		</template>
+																	</el-table-column>
+																	<el-table-column align="center" label="交易金额">
+																		<template slot-scope="scope">
+																			<span>{{ scope.row.orderAmt/100}}</span>
+																		</template>
+																	</el-table-column>
+																	<el-table-column align="center" label="支付方式">
+																		<template slot-scope="scope">
+																			<span>{{ scope.row.payChannel | payTypeFilter}}</span>
+																		</template>
+																	</el-table-column>
+																	
+																</el-table>
+														
+															
+																
+																
+			 											</div>
+			 									</el-dialog>
+			 							</el-col>
 	
        
 	   
@@ -63,7 +122,7 @@
 </template>
 
 <script>
-	import { fetchList} from "@/api/vita/membership.js";
+	import { fetchList, queryOrderList} from "@/api/vita/membership.js";
 	import { mapState, mapGetters } from "vuex";
 
 	
@@ -84,13 +143,11 @@
 					page: 1,
 					limit: 20
 				},
-				activeId: '0',
 				pageShow: false,
-				viewNewfs: false,
-				viewUpdateNewfs: false,
-				newlists:{},
-				aticleText:'',
-				isCreate: 0,
+				dialogFormVisible: false,
+				lookData:{photo:'',phone:''},
+				orderList:[],
+
 			};
 		},
 		computed: {
@@ -100,24 +157,6 @@
 			})
 		},
 		filters: {
-			publishStateFilter(state) {
-				if(state) {
-					const publishStateMap = {
-						'1': "公开",
-						'2': '部分公开',
-						'3': '不公开'
-					};
-					return publishStateMap[state];
-				}
-			},
-			stateFilter(state) {
-				const publishStateMap = {
-					'1': "待审核 ",
-					'2': '审核通过',
-					'3': '审核失败'
-				};
-				return publishStateMap[state];
-			},
 			typeFilter(type){
 				const typeMap = {
 					'01': "",
@@ -131,6 +170,14 @@
 					'01': "个人会员",
 					'02': "企业会员",
 					'03': "培训机构",
+				};
+				return typeMap[type];
+			},
+			payTypeFilter(type){
+				const typeMap = {
+					'01': "支付宝",
+					'02': "微信",
+					'03': "账户",
 				};
 				return typeMap[type];
 			}
@@ -168,22 +215,11 @@
 				this.listQuery.startPage = val;
 				this.getList();
 			},
-			addAticle(){
-				//this.viewNewfs = true;
+			addMember(){
+
+
 				
-				this.activeId = new Date().getTime()+'';
-				this.isCreate = 1;
-				this.viewUpdateNewfs = true
 				
-				this.newlists = {};
-				this.aticleText = '';
-				
-			},
-			cancelNewFsDialog() {
-				this.viewNewfs = false;
-			},
-			cancelUpdateNewFsDialog() {
-				this.viewUpdateNewfs = false;
 			},
 			/**
 			* ifshow: true/false msg: message  type: error/warning/success
@@ -195,12 +231,19 @@
 					type: type
 				})
 			},
-			dialogDetail(idMsg){
-				this.activeId = idMsg
-				this.isCreate = 0
-				this.viewUpdateNewfs = true;
+			dialogDetail(dataInfo){
+				this.lookData = dataInfo;
+				this.dialogFormVisible = true;
+				console.log(this.lookData);
 				
+				let param = {
+					userId:dataInfo.id
+				}
 				
+				queryOrderList(param).then(res => {
+					console.log(res);
+					this.orderList = res.data.data.list;
+				});
 
 			}
 			
@@ -215,6 +258,30 @@
 		width: auto;
 		max-width: 50px;
 		border-radius: 25px;
+	}
+	
+	.sectionInfo{
+		height: 30px;
+		background-color: lightgray;
+		padding-left: 20px;
+	}
+	
+	.inlineH{
+		display: inline-block;
+		width: 20%;
+		text-align: center;
+	}
+	
+	.inlineD{
+		display: inline-block;
+		width: 20%;
+    text-align: center;
+		height: 60px;
+		line-height: 60px;
+	}
+	
+	.inlineD img{
+		vertical-align:middle
 	}
 	
 	
